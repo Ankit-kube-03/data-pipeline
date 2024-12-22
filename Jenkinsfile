@@ -15,7 +15,7 @@ pipeline {
             }
         }
 
-        stage('Terraform Init & Apply') { dir('path/to/terraform/files')
+        stage('Terraform Init & Apply') { 
             steps {
                 script {
                      dir('terraform') {
