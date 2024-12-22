@@ -1,44 +1,56 @@
 pipeline {
     agent any
-
     environment {
-        AWS_ACCESS_KEY_ID = 'AKIA3WS3XVTLDRSOZ35M'
-        AWS_SECRET_ACCESS_KEY = '7XcpG7pd3fPR1hCtfuImZM1buog39nyr5Mx4oiTS'
-        AWS_REGION = 'us-east-1' // Update to match your Terraform setup
-        ECR_REPO_URL = "804425018582.dkr.ecr.us-east-1.amazonaws.com/data-pipeline-app" // Replace with actual URL
-        DOCKER_IMAGE_NAME = 'data-pipeline-app:latest'
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  // Jenkins credential for AWS Access Key
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')  // Jenkins credential for AWS Secret Access Key
+        AWS_REGION = 'us-east-1'  // Set your AWS region
+        ECR_REPOSITORY = 'data-pipeline-app'  // ECR repository name
+        LAMBDA_FUNCTION_NAME = 'data-pipeline-function'  // Lambda function name
+        AWS_ACCOUNT_ID = '804425018582'  // Your AWS account ID
     }
-
     stages {
-        stage('Checkout Code') {
+        stage('Clone Repository') {
             steps {
-                // Fetch source code from the repository
-                git branch: 'main', url: 'https://github.com/Ankit-kube-03/data-pipeline.git' // Update with actual repo URL
-            }
-        }
-
-        stage('Terraform Init & Apply') { 
-            steps {
-                script {
-                     dir('terraform') {
-                    sh '''
-                        terraform init
-                        terraform apply -auto-approve
-                    '''
-                    }
-                }
+                git 'https://github.com/your/repository.git'  // Replace with your GitHub repository URL
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    dir('python-script'){
+                    // Build Docker image from the Dockerfile in the repository
+                    sh 'docker build -t my-app:$BUILD_NUMBER .'
+                }
+            }
+        }
+
+        stage('Run Docker Image') {
+            steps {
+                script {
+                    // Optionally run the Docker container to test it (useful for validation)
+                    sh 'docker run --rm my-app:$BUILD_NUMBER'
+                }
+            }
+        }
+
+        stage('Login to AWS ECR') {
+            steps {
+                script {
+                    // Login to AWS ECR
                     sh '''
-                        docker build -t ${DOCKER_IMAGE_NAME} .
-                        docker run -d --name mypipeline ${DOCKER_IMAGE_NAME} 
+                    $(aws ecr get-login --no-include-email --region $AWS_REGION)
                     '''
-                    }
+                }
+            }
+        }
+
+        stage('Tag Docker Image') {
+            steps {
+                script {
+                    // Tag Docker image with the ECR repository URL
+                    sh '''
+                    docker tag my-app:$BUILD_NUMBER $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$BUILD_NUMBER
+                    '''
                 }
             }
         }
@@ -46,39 +58,28 @@ pipeline {
         stage('Push Docker Image to ECR') {
             steps {
                 script {
+                    // Push the Docker image to AWS ECR
                     sh '''
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
-                        docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPO_URL}:${BUILD_NUMBER}
-                        docker push ${ECR_REPO_URL}:${BUILD_NUMBER}
+                    docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$BUILD_NUMBER
                     '''
                 }
             }
         }
 
-        stage('Update Lambda Function') {
+        stage('Deploy to Lambda') {
             steps {
                 script {
+                    // Update Lambda function with the new Docker image from ECR
                     sh '''
-                        aws lambda update-function-code \
-                            --function-name data-pipeline-function \
-                            --image-uri ${ECR_REPO_URL}:${BUILD_NUMBER}
+                    aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$BUILD_NUMBER
                     '''
                 }
             }
         }
     }
-
     post {
-        success {
-            echo 'Pipeline executed successfully.'
-        }
-        failure {
-            echo 'Pipeline execution failed.'
+        always {
+            cleanWs()  // Clean up workspace after the pipeline
         }
     }
 }
-
-
-
-
-
