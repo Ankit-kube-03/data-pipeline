@@ -31,10 +31,12 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    dir('python-script'){
                     sh '''
                         docker build -t ${DOCKER_IMAGE_NAME} .
                         docker run -d --name mypipeline ${DOCKER_IMAGE_NAME} 
                     '''
+                    }
                 }
             }
         }
