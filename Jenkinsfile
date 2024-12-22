@@ -2,6 +2,8 @@ pipeline {
     agent any
 
     environment {
+        AWS_ACCESS_KEY_ID = 'AKIA3WS3XVTLDRSOZ35M'
+        AWS_SECRET_ACCESS_KEY = '7XcpG7pd3fPR1hCtfuImZM1buog39nyr5Mx4oiTS'
         AWS_REGION = 'us-east-1' // Update to match your Terraform setup
         ECR_REPO_URL = "804425018582.dkr.ecr.us-east-1.amazonaws.com/data-pipeline-app" // Replace with actual URL
         DOCKER_IMAGE_NAME = 'data-pipeline-app:latest'
