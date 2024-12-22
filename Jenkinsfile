@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                node {
+                node('master') {
                     script {
                         // Pull the latest code from the repository
                         checkout scm
@@ -24,7 +24,7 @@ pipeline {
 
         stage('Terraform: Init') {
             steps {
-                node {
+                node('master') {
                     script {
                         // Initialize Terraform
                         sh 'terraform init'
@@ -35,7 +35,7 @@ pipeline {
 
         stage('Terraform: Plan') {
             steps {
-                node {
+                node('master') {
                     script {
                         // Run Terraform plan
                         sh 'terraform plan -out=tfplan'
@@ -46,7 +46,7 @@ pipeline {
 
         stage('Terraform: Apply') {
             steps {
-                node {
+                node('master') {
                     script {
                         // Apply the Terraform plan
                         sh 'terraform apply tfplan'
@@ -57,7 +57,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                node {
+                node('master') {
                     script {
                         // Build the Docker image from the Dockerfile
                         sh 'docker build -t $DOCKER_IMAGE_NAME .'
@@ -68,7 +68,7 @@ pipeline {
 
         stage('Push Docker Image to ECR') {
             steps {
-                node {
+                node('master') {
                     script {
                         // Login to AWS ECR
                         sh '''aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY'''
@@ -85,7 +85,7 @@ pipeline {
 
         stage('Deploy Lambda Function') {
             steps {
-                node {
+                node('master') {
                     script {
                         // Deploy Lambda function using the Docker image in ECR
                         sh '''aws lambda create-function \
@@ -101,7 +101,7 @@ pipeline {
 
         stage('Cleanup') {
             steps {
-                node {
+                node('master') {
                     script {
                         // Clean up resources after the deployment
                         sh 'terraform destroy -auto-approve'
