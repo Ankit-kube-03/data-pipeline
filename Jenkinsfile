@@ -15,13 +15,15 @@ pipeline {
             }
         }
 
-        stage('Terraform Init & Apply') {
+        stage('Terraform Init & Apply') { dir('path/to/terraform/files')
             steps {
                 script {
+                     dir('terraform') {
                     sh '''
                         terraform init
                         terraform apply -auto-approve
                     '''
+                    }
                 }
             }
         }
