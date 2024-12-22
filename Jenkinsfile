@@ -1,78 +1,78 @@
 pipeline {
-    agent any  // This will run the pipeline on any available agent
+    agent any
+
+    environment {
+        AWS_REGION = 'us-east-1' // Update to match your Terraform setup
+        ECR_REPO_URL = "804425018582.dkr.ecr.us-east-1.amazonaws.com/data-pipeline-app" // Replace with actual URL
+        DOCKER_IMAGE_NAME = 'data-pipeline-app:latest'
+    }
 
     stages {
         stage('Checkout Code') {
             steps {
-                checkout scm
+                // Fetch source code from the repository
+                git 'https://github.com/your-repo/project.git' // Update with actual repo URL
             }
         }
 
-        stage('Terraform: Init') {
+        stage('Terraform Init & Apply') {
             steps {
-                sh 'terraform init'
-            }
-        }
-
-        stage('Terraform: Plan') {
-            steps {
-                sh 'terraform plan -out=tfplan'
-            }
-        }
-
-        stage('Terraform: Apply') {
-            steps {
-                sh 'terraform apply tfplan'
+                script {
+                    sh '''
+                        terraform init
+                        terraform apply -auto-approve
+                    '''
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t python-app .'
+                script {
+                    sh '''
+                        docker build -t ${DOCKER_IMAGE_NAME} .
+                        docker run -d --name mypipeline ${DOCKER_IMAGE_NAME} 
+                    '''
+                }
             }
         }
 
         stage('Push Docker Image to ECR') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-access-key-id', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    sh '''aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin your-ecr-repository'''
-                    sh '''docker tag python-app:latest your-ecr-repository:latest'''
-                    sh '''docker push your-ecr-repository:latest'''
+                script {
+                    sh '''
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
+                        docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPO_URL}:${BUILD_NUMBER}
+                        docker push ${ECR_REPO_URL}:${BUILD_NUMBER}
+                    '''
                 }
             }
         }
 
-        stage('Deploy Lambda Function') {
+        stage('Update Lambda Function') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-access-key-id', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    sh '''aws lambda create-function \
-                        --function-name python-lambda \
-                        --package-type Image \
-                        --code ImageUri=your-ecr-repository:latest \
-                        --role arn:aws:iam::123456789012:role/lambda-role \
-                        --timeout 900 --memory-size 512'''
+                script {
+                    sh '''
+                        aws lambda update-function-code \
+                            --function-name data-pipeline-function \
+                            --image-uri ${ECR_REPO_URL}:${BUILD_NUMBER}
+                    '''
                 }
-            }
-        }
-
-        stage('Cleanup') {
-            steps {
-                sh 'terraform destroy -auto-approve'
             }
         }
     }
 
     post {
-        always {
-            archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
-        }
-
         success {
-            echo 'Pipeline executed successfully!'
+            echo 'Pipeline executed successfully.'
         }
-
         failure {
-            echo 'Pipeline failed!'
+            echo 'Pipeline execution failed.'
         }
     }
 }
+
+
+
+
+
