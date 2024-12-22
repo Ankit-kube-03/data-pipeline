@@ -1,10 +1,11 @@
+
 pipeline {
     agent any
 
     environment {
         AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // Add AWS credentials in Jenkins
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // Add AWS secret key in Jenkins
-        AWS_DEFAULT_REGION = 'us-west-2' // Choose your AWS region
+        AWS_DEFAULT_REGION = 'us-west-1' // Choose your AWS region
         TERRAFORM_VERSION = '1.3.6' // Specify your terraform version
         DOCKER_IMAGE_NAME = 'python-app' // Docker image name
         ECR_REPOSITORY = 'your-ecr-repository-url' // ECR repository URL
@@ -40,7 +41,7 @@ pipeline {
             steps {
                 script {
                     // Apply the Terraform plan
-                    sh 'terraform apply tfplan'
+                    sh 'terraform apply -input=false tfplan'
                 }
             }
         }
@@ -58,13 +59,20 @@ pipeline {
             steps {
                 script {
                     // Login to AWS ECR
-                    sh '''aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY'''
+                    sh '''
+                        aws ecr get-login-password --region $AWS_DEFAULT_REGION | \
+                        docker login --username AWS --password-stdin $ECR_REPOSITORY
+                    '''
 
                     // Tag the Docker image
-                    sh '''docker tag $DOCKER_IMAGE_NAME:latest $ECR_REPOSITORY:$BUILD_ID'''
+                    sh '''
+                        docker tag $DOCKER_IMAGE_NAME:latest $ECR_REPOSITORY:$BUILD_ID
+                    '''
 
                     // Push Docker image to ECR
-                    sh '''docker push $ECR_REPOSITORY:$BUILD_ID'''
+                    sh '''
+                        docker push $ECR_REPOSITORY:$BUILD_ID
+                    '''
                 }
             }
         }
@@ -73,12 +81,15 @@ pipeline {
             steps {
                 script {
                     // Deploy Lambda function using the Docker image in ECR
-                    sh '''aws lambda create-function \
-                        --function-name python-lambda \
-                        --package-type Image \
-                        --code ImageUri=$ECR_REPOSITORY:$BUILD_ID \
-                        --role arn:aws:iam::123456789012:role/lambda-role \
-                        --timeout 900 --memory-size 512'''
+                    sh '''
+                        aws lambda create-function \
+                            --function-name python-lambda \
+                            --package-type Image \
+                            --code ImageUri=$ECR_REPOSITORY:$BUILD_ID \
+                            --role arn:aws:iam::123456789012:role/lambda-role \
+                            --timeout 900 \
+                            --memory-size 512
+                    '''
                 }
             }
         }
@@ -95,8 +106,12 @@ pipeline {
 
     post {
         always {
-            // Archive Terraform logs and Docker build logs
-            archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+            // Wrap post actions in a node block to ensure workspace context is available
+            node {
+                // Archive Terraform logs and Docker build logs
+                archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+                echo 'Workspace cleanup completed.'
+            }
         }
 
         success {
