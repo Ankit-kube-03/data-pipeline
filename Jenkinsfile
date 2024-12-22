@@ -1,12 +1,11 @@
-
 pipeline {
     agent any
 
     environment {
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // AWS credentials in Jenkins
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // AWS secret key in Jenkins
-        AWS_DEFAULT_REGION = 'us-west-1' // AWS region
-        TERRAFORM_VERSION = '1.3.6' // Terraform version
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // Add AWS credentials in Jenkins
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // Add AWS secret key in Jenkins
+        AWS_DEFAULT_REGION = 'us-west-1' // Choose your AWS region
+        TERRAFORM_VERSION = '1.3.6' // Specify your terraform version
         DOCKER_IMAGE_NAME = 'python-app' // Docker image name
         ECR_REPOSITORY = 'your-ecr-repository-url' // ECR repository URL
     }
@@ -14,87 +13,99 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                // Pull the latest code from the repository
-                checkout scm
+                node {
+                    script {
+                        // Pull the latest code from the repository
+                        checkout scm
+                    }
+                }
             }
         }
 
         stage('Terraform: Init') {
             steps {
-                script {
-                    sh '''
-                        terraform init
-                    '''
+                node {
+                    script {
+                        // Initialize Terraform
+                        sh 'terraform init'
+                    }
                 }
             }
         }
 
         stage('Terraform: Plan') {
             steps {
-                script {
-                    sh '''
-                        terraform plan -out=tfplan
-                    '''
+                node {
+                    script {
+                        // Run Terraform plan
+                        sh 'terraform plan -out=tfplan'
+                    }
                 }
             }
         }
 
         stage('Terraform: Apply') {
             steps {
-                script {
-                    sh '''
-                        terraform apply -input=false tfplan
-                    '''
+                node {
+                    script {
+                        // Apply the Terraform plan
+                        sh 'terraform apply tfplan'
+                    }
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh '''
-                        docker build -t $DOCKER_IMAGE_NAME .
-                    '''
+                node {
+                    script {
+                        // Build the Docker image from the Dockerfile
+                        sh 'docker build -t $DOCKER_IMAGE_NAME .'
+                    }
                 }
             }
         }
 
         stage('Push Docker Image to ECR') {
             steps {
-                script {
-                    sh '''
-                        aws ecr get-login-password --region $AWS_DEFAULT_REGION | \
-                        docker login --username AWS --password-stdin $ECR_REPOSITORY
-                        
-                        docker tag $DOCKER_IMAGE_NAME:latest $ECR_REPOSITORY:$BUILD_ID
-                        docker push $ECR_REPOSITORY:$BUILD_ID
-                    '''
+                node {
+                    script {
+                        // Login to AWS ECR
+                        sh '''aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY'''
+
+                        // Tag the Docker image
+                        sh '''docker tag $DOCKER_IMAGE_NAME:latest $ECR_REPOSITORY:$BUILD_ID'''
+
+                        // Push Docker image to ECR
+                        sh '''docker push $ECR_REPOSITORY:$BUILD_ID'''
+                    }
                 }
             }
         }
 
         stage('Deploy Lambda Function') {
             steps {
-                script {
-                    sh '''
-                        aws lambda create-function \
+                node {
+                    script {
+                        // Deploy Lambda function using the Docker image in ECR
+                        sh '''aws lambda create-function \
                             --function-name python-lambda \
                             --package-type Image \
                             --code ImageUri=$ECR_REPOSITORY:$BUILD_ID \
                             --role arn:aws:iam::123456789012:role/lambda-role \
-                            --timeout 900 \
-                            --memory-size 512
-                    '''
+                            --timeout 900 --memory-size 512'''
+                    }
                 }
             }
         }
 
         stage('Cleanup') {
             steps {
-                script {
-                    sh '''
-                        terraform destroy -auto-approve
-                    '''
+                node {
+                    script {
+                        // Clean up resources after the deployment
+                        sh 'terraform destroy -auto-approve'
+                    }
                 }
             }
         }
@@ -102,15 +113,17 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline execution completed!'
+            // Archive Terraform logs and Docker build logs
             archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
         }
 
         success {
+            // Notify successful pipeline execution (e.g., Slack, email)
             echo 'Pipeline executed successfully!'
         }
 
         failure {
+            // Notify failure in the pipeline (e.g., Slack, email)
             echo 'Pipeline failed!'
         }
     }
