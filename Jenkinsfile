@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 // Fetch source code from the repository
-                git 'https://github.com/your-repo/project.git' // Update with actual repo URL
+                git 'https://github.com/Ankit-kube-03/data-pipeline.git' // Update with actual repo URL
             }
         }
 
