@@ -3,10 +3,10 @@ pipeline {
     agent any
 
     environment {
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // Add AWS credentials in Jenkins
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // Add AWS secret key in Jenkins
-        AWS_DEFAULT_REGION = 'us-west-1' // Choose your AWS region
-        TERRAFORM_VERSION = '1.3.6' // Specify your terraform version
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // AWS credentials in Jenkins
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // AWS secret key in Jenkins
+        AWS_DEFAULT_REGION = 'us-west-1' // AWS region
+        TERRAFORM_VERSION = '1.3.6' // Terraform version
         DOCKER_IMAGE_NAME = 'python-app' // Docker image name
         ECR_REPOSITORY = 'your-ecr-repository-url' // ECR repository URL
     }
@@ -22,8 +22,9 @@ pipeline {
         stage('Terraform: Init') {
             steps {
                 script {
-                    // Initialize Terraform
-                    sh 'terraform init'
+                    sh '''
+                        terraform init
+                    '''
                 }
             }
         }
@@ -31,8 +32,9 @@ pipeline {
         stage('Terraform: Plan') {
             steps {
                 script {
-                    // Run Terraform plan
-                    sh 'terraform plan -out=tfplan'
+                    sh '''
+                        terraform plan -out=tfplan
+                    '''
                 }
             }
         }
@@ -40,8 +42,9 @@ pipeline {
         stage('Terraform: Apply') {
             steps {
                 script {
-                    // Apply the Terraform plan
-                    sh 'terraform apply -input=false tfplan'
+                    sh '''
+                        terraform apply -input=false tfplan
+                    '''
                 }
             }
         }
@@ -49,8 +52,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image from the Dockerfile
-                    sh 'docker build -t $DOCKER_IMAGE_NAME .'
+                    sh '''
+                        docker build -t $DOCKER_IMAGE_NAME .
+                    '''
                 }
             }
         }
@@ -58,19 +62,11 @@ pipeline {
         stage('Push Docker Image to ECR') {
             steps {
                 script {
-                    // Login to AWS ECR
                     sh '''
                         aws ecr get-login-password --region $AWS_DEFAULT_REGION | \
                         docker login --username AWS --password-stdin $ECR_REPOSITORY
-                    '''
-
-                    // Tag the Docker image
-                    sh '''
+                        
                         docker tag $DOCKER_IMAGE_NAME:latest $ECR_REPOSITORY:$BUILD_ID
-                    '''
-
-                    // Push Docker image to ECR
-                    sh '''
                         docker push $ECR_REPOSITORY:$BUILD_ID
                     '''
                 }
@@ -80,7 +76,6 @@ pipeline {
         stage('Deploy Lambda Function') {
             steps {
                 script {
-                    // Deploy Lambda function using the Docker image in ECR
                     sh '''
                         aws lambda create-function \
                             --function-name python-lambda \
@@ -97,8 +92,9 @@ pipeline {
         stage('Cleanup') {
             steps {
                 script {
-                    // Clean up resources after the deployment
-                    sh 'terraform destroy -auto-approve'
+                    sh '''
+                        terraform destroy -auto-approve
+                    '''
                 }
             }
         }
@@ -106,21 +102,15 @@ pipeline {
 
     post {
         always {
-            // Wrap post actions in a node block to ensure workspace context is available
-            node {
-                // Archive Terraform logs and Docker build logs
-                archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
-                echo 'Workspace cleanup completed.'
-            }
+            echo 'Pipeline execution completed!'
+            archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
         }
 
         success {
-            // Notify successful pipeline execution (e.g., Slack, email)
             echo 'Pipeline executed successfully!'
         }
 
         failure {
-            // Notify failure in the pipeline (e.g., Slack, email)
             echo 'Pipeline failed!'
         }
     }
