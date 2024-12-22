@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        #AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // Add AWS credentials in Jenkins
-        #AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // Add AWS secret key in Jenkins
+        // AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // Add AWS credentials in Jenkins
+        // AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // Add AWS secret key in Jenkins
         AWS_DEFAULT_REGION = 'us-west-1' // Choose your AWS region
         TERRAFORM_VERSION = '1.3.6' // Specify your terraform version
         DOCKER_IMAGE_NAME = 'python-app' // Docker image name
