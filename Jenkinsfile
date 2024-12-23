@@ -16,18 +16,13 @@ pipeline {
                 branch 'main'
             }
         }
-       // stage('Set AWS Credentials') {
-      //     steps{
-     //        withAWS(credentials: 'aws-credentials-id', region: "${AWS_REGION}") 
-    //      }
-   //  }
         stage('Build Docker Image') {
              steps {
                  dir('python-script') {
                      script {
                           node{
                           // Build Docker image from the Dockerfile in the repository
-                          sh 'docker build -t my-app:latest .'
+                          sh 'sudo docker build -t my-app:latest .'
                           }
                      }
                  }
@@ -37,7 +32,7 @@ pipeline {
             steps {
                 script {
                     // Optionally run the Docker container to test it (useful for validation)
-                    sh 'docker run --rm my-app:latest'
+                    sh 'sudo docker run --rm my-app:latest'
                 }
             }
         }
@@ -57,7 +52,7 @@ pipeline {
                 script {
                     // Tag Docker image with the ECR repository URL
                     sh '''
-                    docker tag my-app:$BUILD_NUMBER $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+                    sudo docker tag my-app:$BUILD_NUMBER $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
                     '''
                 }
             }
@@ -68,7 +63,7 @@ pipeline {
                 script {
                     // Push the Docker image to AWS ECR
                     sh '''
-                    docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+                    sudo docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
                     '''
                 }
             }
