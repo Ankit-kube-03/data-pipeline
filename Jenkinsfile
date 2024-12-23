@@ -22,7 +22,7 @@ pipeline {
                      script {
                           node{
                           // Build Docker image from the Dockerfile in the repository
-                          sh 'sudo docker build -t my-user:latest .'
+                          sh 'sudo docker build -t my-user .'
                           }
                      }
                  }
@@ -32,7 +32,7 @@ pipeline {
             steps {
                 script {
                     // Optionally run the Docker container to test it (useful for validation)
-                    sh 'sudo docker run --name users.data -d my-user:latest'
+                    sh 'sudo docker run --name users.data -d my-user'
                 }
             }
         }
