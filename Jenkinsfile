@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/your/repository.git'  // Replace with your GitHub repository URL
+                git 'https://github.com/Ankit-kube-03/data-pipeline.git'  // Replace with your GitHub repository URL
             }
         }
 
