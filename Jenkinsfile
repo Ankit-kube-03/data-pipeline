@@ -1,18 +1,18 @@
 pipeline {
     agent any
     environment {
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  // Jenkins credential for AWS Access Key
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')  // Jenkins credential for AWS Secret Access Key
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')  
         AWS_REGION = 'us-east-1'  // Set your AWS region
-        ECR_REPOSITORY = 'data-pipeline-app'  // ECR repository name
-        LAMBDA_FUNCTION_NAME = 'data-pipeline-function'  // Lambda function name
-        AWS_ACCOUNT_ID = '804425018582'  // Your AWS account ID
+        ECR_REPOSITORY = 'data-pipeline-app'
+        LAMBDA_FUNCTION_NAME = 'data-pipeline-function'  
+        AWS_ACCOUNT_ID = '804425018582'  
     }
     stages {
         stage('Clone Repository') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/Ankit-kube-03/data-pipeline.git'  // Replace with your GitHub repository URL
+                    url: 'https://github.com/Ankit-kube-03/data-pipeline.git' 
                 branch 'main'
             }
         }
@@ -21,7 +21,6 @@ pipeline {
                  dir('data-pipeline') {
                      script {
                           node{
-                          // Build Docker image from the Dockerfile in the repository
                           sh 'sudo docker build -t my-user .'
                           }
                      }
@@ -31,7 +30,6 @@ pipeline {
         stage('Run Docker Image') {
             steps {
                 script {
-                    // Optionally run the Docker container to test it (useful for validation)
                     sh 'sudo docker run --env-file /var/lib/jenkins/workspace/data-pipeline@2/.env my-user'
                 }
             }
@@ -40,7 +38,6 @@ pipeline {
         stage('Tag Docker Image') {
             steps {
                 script {
-                    // Tag Docker image with the ECR repository URL
                     sh '''
                     sudo docker tag my-user:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
                     '''
@@ -51,7 +48,6 @@ pipeline {
         stage('Push Docker Image to ECR') {
             steps {
                 script {
-                    // Push the Docker image to AWS ECR
                     sh '''
                     sudo docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
                     '''
@@ -62,7 +58,7 @@ pipeline {
         
     post {
         always {
-            cleanWs()  // Clean up workspace after the pipeline
+            cleanWs()  
         }
     }
 }
