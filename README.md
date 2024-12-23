@@ -3,7 +3,7 @@
 
 # Step-by-Step Explanation
 # Step 1: Project Goals
-     The primary objectives of this project are:
+The primary objectives of this project are:
    1.Automate data handling from AWS S3 to AWS RDS or AWS Glue.
    2.Use Docker to containerize the application for portability.
    3.Deploy the container to AWS ECR and use Lambda for execution.
@@ -11,7 +11,7 @@
    5.Use Terraform for infrastructure as code.
 
 # Step 2: IAM Role & Policies 
-     Create and IAM User and attach the all necessary policies to the user so it can work without any error.
+ Create and IAM User and attach the all necessary policies to the user so it can work without any error.
 
 # Step 3: Application Development
 1. Python Script: 
