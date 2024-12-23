@@ -7,21 +7,21 @@ import io
 from botocore.exceptions import ClientError
 
 # AWS configuration
-S3_BUCKET_NAME = "my-data-bucket-03"  # Replace with your S3 bucket name
-AWS_REGION = "us-east-1"  # Ensure this matches your Terraform setup
-CSV_FILE_NAME = "/tmp/users.csv"  # Use /tmp for writable files in AWS Lambda
-ZIP_FILE_NAME = "/tmp/users.zip"  # Use /tmp for the ZIP file
+S3_BUCKET_NAME = "my-data-bucket-03"  
+AWS_REGION = "us-east-1"  
+CSV_FILE_NAME = "/tmp/users.csv"  
+ZIP_FILE_NAME = "/tmp/users.zip" 
 
 # RDS Configuration
-RDS_HOST = 'rds-instance.cdc4yye8yku4.us-east-1.rds.amazonaws.com'  # Replace with your RDS endpoint
-RDS_USER = 'admin'  # Replace with your RDS username
-RDS_PASSWORD = 'password123'  # Replace with your RDS password
-RDS_DATABASE = 'data_pipeline'  # Replace with your RDS database name
-RDS_TABLE = 'my_users'  # Replace with your RDS table name
+RDS_HOST = 'rds-instance.cdc4yye8yku4.us-east-1.rds.amazonaws.com' 
+RDS_USER = 'admin' 
+RDS_PASSWORD = 'password123'  
+RDS_DATABASE = 'data_pipeline'  
+RDS_TABLE = 'my_users'  
 
 # AWS Glue Configuration
-AWS_GLUE_DATABASE = 'fallback_database'  # Replace with your Glue database name
-AWS_GLUE_TABLE = 'user_backup'  # Replace with your Glue table name
+AWS_GLUE_DATABASE = 'fallback_database' 
+AWS_GLUE_TABLE = 'user_backup'  
 
 # Create sample data for testing
 def create_sample_csv(file_name):
