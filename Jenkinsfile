@@ -18,11 +18,11 @@ pipeline {
         }
         stage('Build Docker Image') {
              steps {
-                 dir('data-pipeline/python-script') {
+                 dir('data-pipeline/python-script/Dockerfile') {
                      script {
                           node{
                           // Build Docker image from the Dockerfile in the repository
-                          sh 'sudo docker build -f data-pipeline/python-script/Dockerfile -t my-app:latest .'
+                          sh 'sudo docker build -t my-app:latest .'
                           }
                      }
                  }
