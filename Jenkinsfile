@@ -11,26 +11,28 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/Ankit-kube-03/data-pipeline.git'  // Replace with your GitHub repository URL
+                git branch: 'main',
+                    url: 'https://github.com/Ankit-kube-03/data-pipeline.git'  // Replace with your GitHub repository URL
+                branch 'main'
             }
         }
         stage('Set AWS Credentials') {
             steps{
                 withAWS(credentials: 'aws-credentials-id', region: "${AWS_REGION}") 
             }
-        } 
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    node{
-                    // Build Docker image from the Dockerfile in the repository
-                    sh 'docker build -t my-app:latest .'
-                    }
-                }
-            }
         }
-
+        stage('Build Docker Image') {
+             steps {
+                 dir('python-script') {
+                     script {
+                          node{
+                          // Build Docker image from the Dockerfile in the repository
+                          sh 'docker build -t my-app:latest .'
+                          }
+                     }
+                 }
+             }
+        }        
         stage('Run Docker Image') {
             steps {
                 script {
@@ -50,7 +52,6 @@ pipeline {
                 }
             }
         }
-
         stage('Tag Docker Image') {
             steps {
                 script {
