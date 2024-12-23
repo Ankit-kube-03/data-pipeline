@@ -18,7 +18,7 @@ pipeline {
         }
         stage('Build Docker Image') {
              steps {
-                 dir('data-pipeline/Dockerfile') {
+                 dir('data-pipeline') {
                      script {
                           node{
                           // Build Docker image from the Dockerfile in the repository
