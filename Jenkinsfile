@@ -42,7 +42,8 @@ pipeline {
                 script {
                     // Login to AWS ECR
                     sh '''
-                    $(aws ecr get-login --no-include-email --region $AWS_REGION)
+                    $(aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 804425018582.dkr.ecr.us-east-1.amazonaws.com
+)
                     '''
                 }
             }
@@ -52,7 +53,7 @@ pipeline {
                 script {
                     // Tag Docker image with the ECR repository URL
                     sh '''
-                    sudo docker tag my-app:$BUILD_NUMBER $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+                    sudo docker tag my-user:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
                     '''
                 }
             }
