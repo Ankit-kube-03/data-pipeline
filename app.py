@@ -1,4 +1,4 @@
-oto3
+import boto3
 import os
 import zipfile
 import pymysql
