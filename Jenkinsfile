@@ -59,17 +59,6 @@ pipeline {
             }
         }
 
-        stage('Deploy to Lambda') {
-            steps {
-                script {
-                    // Update Lambda function with the new Docker image from ECR
-                    sh '''
-                    aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$latest
-                    '''
-                }
-            }
-        }
-    }
     post {
         always {
             cleanWs()  // Clean up workspace after the pipeline
