@@ -32,7 +32,7 @@ pipeline {
             steps {
                 script {
                     // Optionally run the Docker container to test it (useful for validation)
-                    sh 'sudo docker run --env-file .env my-user'
+                    sh 'sudo docker run --env-file /var/lib/jenkins/workspace/data-pipeline@2/.env my-user'
                 }
             }
         }
