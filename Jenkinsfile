@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     // Build Docker image from the Dockerfile in the repository
-                    sh 'docker build -t my-app:$BUILD_NUMBER .'
+                    sh 'docker build -t my-app:latest .'
                 }
             }
         }
@@ -28,7 +28,7 @@ pipeline {
             steps {
                 script {
                     // Optionally run the Docker container to test it (useful for validation)
-                    sh 'docker run --rm my-app:$BUILD_NUMBER'
+                    sh 'docker run --rm my-app:latest'
                 }
             }
         }
@@ -49,7 +49,7 @@ pipeline {
                 script {
                     // Tag Docker image with the ECR repository URL
                     sh '''
-                    docker tag my-app:$BUILD_NUMBER $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$BUILD_NUMBER
+                    docker tag my-app:$BUILD_NUMBER $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
                     '''
                 }
             }
@@ -60,7 +60,7 @@ pipeline {
                 script {
                     // Push the Docker image to AWS ECR
                     sh '''
-                    docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$BUILD_NUMBER
+                    docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
                     '''
                 }
             }
@@ -71,7 +71,7 @@ pipeline {
                 script {
                     // Update Lambda function with the new Docker image from ECR
                     sh '''
-                    aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$BUILD_NUMBER
+                    aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$latest
                     '''
                 }
             }
