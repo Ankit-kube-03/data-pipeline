@@ -1,13 +1,20 @@
 pipeline {
     agent any
     environment {
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  // Jenkins credential for AWS Access Key
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')  // Jenkins credential for AWS Secret Access Key
+       // AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  // Jenkins credential for AWS Access Key
+       // AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')  // Jenkins credential for AWS Secret Access Key
         AWS_REGION = 'us-east-1'  // Set your AWS region
         ECR_REPOSITORY = 'data-pipeline-app'  // ECR repository name
         LAMBDA_FUNCTION_NAME = 'data-pipeline-function'  // Lambda function name
         AWS_ACCOUNT_ID = '804425018582'  // Your AWS account ID
     }
+    stages{
+        stage('Set AWS Credentials') {
+            steps{
+                withAWS(credentials: 'aws-credentials-id', region: "${AWS_REGION}") 
+            }
+        }
+    }   
     stages {
         stage('Clone Repository') {
             steps {
@@ -18,8 +25,10 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    node{
                     // Build Docker image from the Dockerfile in the repository
                     sh 'docker build -t my-app:latest .'
+                    }
                 }
             }
         }
