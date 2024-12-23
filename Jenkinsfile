@@ -8,7 +8,7 @@ pipeline {
         LAMBDA_FUNCTION_NAME = 'data-pipeline-function'  // Lambda function name
         AWS_ACCOUNT_ID = '804425018582'  // Your AWS account ID
     }
-    stages{
+    stages {
         stage('Set AWS Credentials') {
             steps{
                 withAWS(credentials: 'aws-credentials-id', region: "${AWS_REGION}") 
