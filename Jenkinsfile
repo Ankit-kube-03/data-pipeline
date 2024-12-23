@@ -58,9 +58,10 @@ pipeline {
                 }
             }
         }
-
     post {
         always {
             cleanWs()  // Clean up workspace after the pipeline
         }
     }
+}
+}
