@@ -9,18 +9,16 @@ pipeline {
         AWS_ACCOUNT_ID = '804425018582'  // Your AWS account ID
     }
     stages {
-        stage('Set AWS Credentials') {
-            steps{
-                withAWS(credentials: 'aws-credentials-id', region: "${AWS_REGION}") 
-            }
-        }
-    }   
-    stages {
         stage('Clone Repository') {
             steps {
                 git 'https://github.com/Ankit-kube-03/data-pipeline.git'  // Replace with your GitHub repository URL
             }
         }
+        stage('Set AWS Credentials') {
+            steps{
+                withAWS(credentials: 'aws-credentials-id', region: "${AWS_REGION}") 
+            }
+        } 
 
         stage('Build Docker Image') {
             steps {
