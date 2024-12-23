@@ -4,7 +4,7 @@ provider "aws" {
 
 # S3 Bucket for Input Data
 resource "aws_s3_bucket" "data_bucket" {
-  bucket = "my-data-bucket-03"  # Ensure this bucket name is unique globally
+  bucket = "my-data-bucket-03"  
 }
 
 # IAM Role for Lambda
@@ -37,7 +37,7 @@ resource "aws_db_instance" "rds_instance" {
   instance_class       = "db.t3.medium"
   db_name              = "data_pipeline"
   username             = "admin"
-  password             = "password123"  # Use secrets manager for sensitive information
+  password             = "password123"  
   parameter_group_name = "default.mysql8.0"
   skip_final_snapshot  = true
 }
